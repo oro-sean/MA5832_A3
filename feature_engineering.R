@@ -5,7 +5,6 @@ if(!is.null(dev.list())) dev.off() # clear plots
 cat("\014") # clear console
 .rs.restartR()
 
-
 library(readxl, quietly = TRUE)
 library(tidyr, quietly = TRUE)
 library(dplyr, quietly = TRUE)
@@ -64,7 +63,7 @@ VAR <- function(vec, w, response){
   meaningful <- max(abs(cor_var$acf[1:20])) > lim # check if correlation is significant
   
   if (meaningful){ # if correlation is significant
-    correlation <- abs(rev(cor_var$acf[1:20])) # vector of correlation coefficients from lag 0 to 20
+    correlation <- abs(rev(cor_var$acf[1:20])) # vector of correlation coefficients from lag 0 to 20 (only lag no leading)
     lags <- which(diff(diff(correlation)>=0)<0) # identify local maxima of correlations along the lag
     if (length(lags) != 0){ # if a maxima is found
       max <- which.max(correlation[lags]) # identify which maxima is greatest
@@ -74,11 +73,17 @@ VAR <- function(vec, w, response){
       return(list(var,cc,lag))  # return vector and corresponding correlation
     }
     else { # if no maxima is found return the rolling data and correlation for lag = 0
-      cc<- abs(cor_me$acf[21])
-    return(list(me,cc,lag))
+      lag <- 0
+      cc<- abs(cor_var$acf[21])
+      return(list(var,cc,lag))
     }
   }
-
+  else{
+    vec <- rep(NA, length(vec))
+    cc <- NA
+    lag <- NA
+    return(list(vec, cc, lag))
+  }
 }
 
 ME <- function(vec, w, response){
@@ -100,25 +105,92 @@ ME <- function(vec, w, response){
       return(list(me,cc,lag))  # return vector and corresponding correlation
     }
     else{ # if no maxima is found return the rolling data and correlation for lag = 0
+      lag <- 0
       cc<- abs(cor_me$acf[21])
       return(list(me,cc,lag))
     }
   }
+  else{
+    vec <- rep(NA, length(vec))
+    cc <- NA
+    lag <- NA
+    return(list(vec, cc, lag))
+  }
+}
+
+VEC <- function(vec, response){
+  vec <- rawData$X4
+  response <- rawData$Y
+  ## Function to take time series data and inspect for correlation at lags 0 --> 20 and return lagged variable that had the highest correlation
+  cor_vec <- ccf(vec, response, na.action = na.omit, lag.max = 20) # calculate rolling mean for 0 to 20 time periods lg
+  lim <- qnorm((1 + 0.95)/2)/sqrt(cor_vec$n.used) # calculate 95% confidence interval of correlation
+  meaningful <- max(abs(cor_vec$acf[1:20])) > lim # check if correlation is significant
+  
+  if (meaningful){ # if correlation is significant
+    correlation <- abs(rev(cor_vec$acf[1:20])) # vector of correlation coefficients from lag 0 to 20 
+    lags <- which(diff(diff(correlation)>=0)<0) # identify local maxima of correlations along the lag
+    if (length(lags) != 0){ # if a maxima is found
+      max <- which.max(correlation[lags]) # identify which maxima is greatest
+      lag <- lags[max] # set lag to the lag corresponding to the highest correlation
+      vec <- lag(vec,lag) # apply lag to the rolling mean data
+      cc <- correlation[lag]
+      return(list(vec,cc,lag))  # return vector and corresponding correlation
+    }
+  }
+  else{
+    vec <- rep(NA, length(vec))
+    cc <- NA
+    lag <- NA
+    return(list(vec, cc, lag))
+    
+  }
   
 }
 
-
-varRoll <- ME(rawData$X3, 10, rawData$Y)
-
-
-varFeatures <- foreach(i = 2:20, .combine = cbind) %do% { # cycle over rolling window 2 --> 20 (6 months to 5 years)
-  VAR(rawData$X3, i, rawData$Y)
+ENG <- function(predictor, response){ # function to take response and predictor and find best rolling and laged combo for mean and variance as
+  #well as best lagging and return lagged predictors as a df
+  varFeatures <- foreach(i = 2:20, .combine = cbind) %do% { # cycle over rolling window 2 --> 20 (6 months to 5 years)
+    VAR(predictor, i, response)
+  }
+  
+  meFeatures <- foreach(i = 2:20, .combine = cbind) %do% { # cycle over rolling window 2 --> 20 (6 months to 5 years)
+    ME(predictor, i, response)
+  }
+  
+  lagFeatures <- VEC(predictor, response)
+  
+  varFeat_rol <- varFeatures[which.max(unlist(varFeatures[seq(from = 2, to = length(varFeatures), by = 3)]))*3-2] # assign the rolling feature which has highest correlation
+  meFeat_rol  <- meFeatures[which.max(unlist(meFeatures[seq(from = 2, to = length(meFeatures), by = 3)]))*3-2] # assign the rolling feature which has highest correlation
+  lagFeat <- lagFeatures[1] # assign best lagged features
+  
+  varFeat_rol_lag <- varFeatures[which.max(unlist(varFeatures[seq(from = 2, to = length(varFeatures), by = 3)]))*3] # assign the lag used for best rolling feature
+  meFeat_rol_lag <- meFeatures[which.max(unlist(meFeatures[seq(from = 2, to = length(meFeatures), by = 3)]))*3] # assign the lag used for best rolling feature
+  lagFeat_lag <- lagFeatures[3] # record best lag
+  
+  varFeat_rol_window <- which.max(unlist(varFeatures[seq(from = 2, to = length(varFeatures), by = 3)])) # assign the window used for best rolling feature
+  meFeat_rol_window <- which.max(unlist(meFeatures[seq(from = 2, to = length(meFeatures), by = 3)])) # assign the window used for best rolling feature
+  
+  ## if a feature has not been produced then assign a vector of NA's
+  if(length(varFeat_rol) != length(predictor)){
+    varFeat_rol <- rep(NA, length(predictor))
+  }
+  
+  if(length(meFeat_rol) != length(predictor)){
+    meFeat_rol <- rep(NA, length(predictor))
+  }
+  
+  if(length(lagFeat) != length(predictor)){
+    lagFeat <- rep(NA, length(predictor))
+  }
+  
+  engFeatures <- data.frame(varFeat_rol, meFeat_rol, lagFeat) # group feature vectors together in data frame
+  names(engFeatures) <- c( # give meaningful names
+    paste("Variance_Window",unlist(varFeat_rol_window),"lagged", varFeat_rol_lag, sep  ="_"),
+    paste("mean_Window",unlist(meFeat_rol_window),"lagged", meFeat_rol_lag, sep  ="_"),
+    paste("lagged", lagFeat_lag, sep  ="_"))
+  return(engFeatures)
 }
 
-meFeatures <- foreach(i = 2:20, .combine = cbind) %do% { # cycle over rolling window 2 --> 20 (6 months to 5 years)
-  ME(rawData$X3, i, rawData$Y)
-}
+hihi <- ENG(rawData$X6,rawData$Y)
 
-varFeat <- varFeatures[which.max(unlist(varFeatures[seq(from = 2, to = length(varFeatures), by = 3)]))] # assign the rolling feature which has highest correlation
-meFeat <- meFeatures[which.max(unlist(meFeatures[seq(from = 2, to = length(meFeatures), by = 3)]))] # assign the rolling feature which has highest correlation
 
