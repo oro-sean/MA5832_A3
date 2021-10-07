@@ -84,12 +84,12 @@ timeSeries_plot_init <- ggplot(data = plotData, aes(x = Date, y = value)) + # pl
 timeSeries_plot_init
 
 ## we can see that job vacancies and population continue to grow - not great comparision as they are absolute
-rawData$T1 <- insert(diff(rawData$X6), 1, values = NA) / rawData$X6 * 100 # create T1 variable % change to X6
+rawData$T1 <- insert(diff(rawData$X6), 1, values = NA) / rawData$X6 * 100 # create T1 variable % change to X6 (job vacancies)
 
-rawData <- rawData %>% mutate(T2 = X6 / X7 * 100) %>% # create T2 Variable X6 normalised for population
+rawData <- rawData %>% mutate(T2 = X6 / X7 * 100) %>% # create T2 Variable X6 (job vacancies) normalised for population
   mutate(T3 = ifelse(Date < as.Date("2000-07-01"), X5 * 1.1, X5)) # create T3 Correct CPI for GST
 
-rawData$T4 <- insert(diff(rawData$X5), 1, values = NA) / rawData$X5 * 400
+rawData$T4 <- insert(diff(rawData$X5), 1, values = NA) / rawData$X5 * 400 # create
 
 plotData <- rawData
 

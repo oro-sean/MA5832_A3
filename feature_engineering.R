@@ -119,8 +119,7 @@ ME <- function(vec, w, response){
 }
 
 VEC <- function(vec, response){
-  vec <- rawData$X4
-  response <- rawData$Y
+
   ## Function to take time series data and inspect for correlation at lags 0 --> 20 and return lagged variable that had the highest correlation
   cor_vec <- ccf(vec, response, na.action = na.omit, lag.max = 20) # calculate rolling mean for 0 to 20 time periods lg
   lim <- qnorm((1 + 0.95)/2)/sqrt(cor_vec$n.used) # calculate 95% confidence interval of correlation
@@ -128,6 +127,7 @@ VEC <- function(vec, response){
   
   if (meaningful){ # if correlation is significant
     correlation <- abs(rev(cor_vec$acf[1:20])) # vector of correlation coefficients from lag 0 to 20 
+    correlation[c(1,20)] <- 0 # set the first correlation to 0 so if it is an acending serris a maxima will always be found
     lags <- which(diff(diff(correlation)>=0)<0) # identify local maxima of correlations along the lag
     if (length(lags) != 0){ # if a maxima is found
       max <- which.max(correlation[lags]) # identify which maxima is greatest
@@ -142,13 +142,12 @@ VEC <- function(vec, response){
     cc <- NA
     lag <- NA
     return(list(vec, cc, lag))
-    
   }
-  
 }
 
 ENG <- function(predictor, response){ # function to take response and predictor and find best rolling and laged combo for mean and variance as
   #well as best lagging and return lagged predictors as a df
+  
   varFeatures <- foreach(i = 2:20, .combine = cbind) %do% { # cycle over rolling window 2 --> 20 (6 months to 5 years)
     VAR(predictor, i, response)
   }
@@ -159,7 +158,10 @@ ENG <- function(predictor, response){ # function to take response and predictor 
   
   lagFeatures <- VEC(predictor, response)
   
-  varFeat_rol <- varFeatures[which.max(unlist(varFeatures[seq(from = 2, to = length(varFeatures), by = 3)]))*3-2] # assign the rolling feature which has highest correlation
+   n <- ifelse(length(which.max(unlist(varFeatures[seq(from = 2, to = length(varFeatures), by = 3)]))) == 0, 1,
+          which.max(unlist(varFeatures[seq(from = 2, to = length(varFeatures), by = 3)]))*3-2)
+  
+  varFeat_rol <- varFeatures[n] # assign the rolling feature which has highest correlation
   meFeat_rol  <- meFeatures[which.max(unlist(meFeatures[seq(from = 2, to = length(meFeatures), by = 3)]))*3-2] # assign the rolling feature which has highest correlation
   lagFeat <- lagFeatures[1] # assign best lagged features
   
@@ -170,19 +172,6 @@ ENG <- function(predictor, response){ # function to take response and predictor 
   varFeat_rol_window <- which.max(unlist(varFeatures[seq(from = 2, to = length(varFeatures), by = 3)])) # assign the window used for best rolling feature
   meFeat_rol_window <- which.max(unlist(meFeatures[seq(from = 2, to = length(meFeatures), by = 3)])) # assign the window used for best rolling feature
   
-  ## if a feature has not been produced then assign a vector of NA's
-  if(length(varFeat_rol) != length(predictor)){
-    varFeat_rol <- rep(NA, length(predictor))
-  }
-  
-  if(length(meFeat_rol) != length(predictor)){
-    meFeat_rol <- rep(NA, length(predictor))
-  }
-  
-  if(length(lagFeat) != length(predictor)){
-    lagFeat <- rep(NA, length(predictor))
-  }
-  
   engFeatures <- data.frame(varFeat_rol, meFeat_rol, lagFeat) # group feature vectors together in data frame
   names(engFeatures) <- c( # give meaningful names
     paste("Variance_Window",unlist(varFeat_rol_window),"lagged", varFeat_rol_lag, sep  ="_"),
@@ -191,6 +180,60 @@ ENG <- function(predictor, response){ # function to take response and predictor 
   return(engFeatures)
 }
 
-hihi <- ENG(rawData$X6,rawData$Y)
+EngineeredFeatures <- foreach(i = 3:ncol(rawData), .combine = cbind) %do% {
+  feat <- names(rawData)[i]
+  newFeat <- ENG(rawData[ ,i], rawData$Y)
+  label <- names(newFeat)
+  foreach(n = 1:length(names(newFeat)), .combine = c) %do% {
+    label[n] <- paste(feat,label[n], sep = "_")
+    
+  }
+  names(newFeat) <- label
+  newFeat
+  
+}
+
+EngineeredFeatures <- EngineeredFeatures[ ,colSums(is.na(EngineeredFeatures))<nrow(EngineeredFeatures)]
+
+Correlation <- apply(EngineeredFeatures, 2, cor, y = rawData$Y, use = "complete.obs")
+`# NA's` <- colSums(is.na(EngineeredFeatures))
+
+plot(x = `# NA's`, y = 1 - abs(Correlation))
+
+EngineeredFeatures <- EngineeredFeatures[ ,colSums(is.na(EngineeredFeatures))<22]
+
+
+modelData <- c(rawData, EngineeredFeatures)
+modelData <- as.data.frame(modelData)
+modelData <- modelData[complete.cases(modelData), ]
+results <- data.frame(Date =modelData[year(modelData$Date) > 2018, 10])
+trainAss <- data.frame(Date = modelData[year(modelData$Date) <= 2018, 10])
+
+testData <- modelData[year(modelData$Date) > 2018, -1]
+trainData <- modelData[year(modelData$Date) <= 2018, -1]
+
+mean <- apply(trainData[ , -1], 2, mean)
+std <- apply(trainData[ , -1], 2, sd)
+
+testPred = scale(testData[ ,-1], center = mean, scale = std)
+testResponse = testData[,-1]
+
+results$Actual <- testResponse
+
+trainPred = scale(trainData[ ,-1], center = mean, scale = std)
+trainResponse = trainData[-1] 
+
+trainAss$Actual <- trainResponse
+
+MOD <- earth(x = trainPred, y = trainResponse, pmethod = "cv", ncross = 3, nfold = 5)
+summary(MOD)
+results$Predictions <- predict(MOD, newdata = testPred)
+trainAss$Predictions <- predict(MOD)
+plot(MOD)
+
+ggplot(data = results) + geom_line(aes(x = Date, y = Predictions), colour = "red") +geom_line(aes(x = Date, y = Actual), colour = "blue") 
+ggplot(data = trainAss) + geom_line(aes(x = Date, y = Predictions), colour = "red") +geom_line(aes(x = Date, y = Actual), colour = "blue") 
+
+
 
 
