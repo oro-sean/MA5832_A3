@@ -1,6 +1,5 @@
 ## set up environment and import data file
 
-
 rm(list = ls()) # removes all variables
 if(!is.null(dev.list())) dev.off() # clear plots
 cat("\014") # clear console
@@ -11,15 +10,18 @@ library(ggplot2, quietly = TRUE)
 library(tensorflow, quietly = TRUE)
 library(reticulate, quietly = TRUE)
 
+data <- readRDS(file = "data.RDS")
+results <- as.data.frame(data[5])
+trainAss <- as.data.frame(data[6])
+testPred <- as.data.frame(data[7])
+testResponse <- as.data.frame(data[8])
+trainPred <- as.data.frame(data[9])
+trainResponse <- as.data.frame(data[10])
 
-testResponse <- readRDS(file = "testResponse.RDS")
-testPred <- readRDS(file = "testPred.RDS")
-trainResponse <- readRDS(file = "trainResponse.RDS")
-trainPred <- readRDS(file = "trainPred.RDS")
 
 model <- keras_model_sequential() %>%
-  layer_dense(units = 8, activation = "relu", input_shape = c(ncol(testPred))) %>%
-  layer_dense(unit = 8, activation = "relu") %>%
+  layer_dense(units = 19, activation = "relu", input_shape = c(ncol(testPred))) %>%
+  layer_dense(unit = 19, activation = "relu") %>%
   layer_dense(units = 1)
 
 model %>% compile(
