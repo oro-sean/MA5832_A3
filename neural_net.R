@@ -13,11 +13,20 @@ library(reticulate, quietly = TRUE)
 data <- readRDS(file = "data.RDS")
 results <- as.data.frame(data[5])
 trainAss <- as.data.frame(data[6])
-testPred <- as.data.frame(data[7])
+testPred <- as.matrix(as.data.frame(data[7]))
 testResponse <- unlist(data[8])
-trainPred <- as.data.frame(data[9])
+trainPred <- as.matrix(as.data.frame(data[9]))
 trainResponse <- unlist(data[10])
 
+conda_binary(conda = "auto")
+conda_python(conda = "auto")
+conda_list(conda = "auto")
+
+install_keras(method = "conda", conda = "auto", envname = "r-reticulate")
+conda_install("r-reticulate", "tensorflow")
+
+Sys.getenv()
+Sys.setenv(RETICULATE_PYTHON = "C:/Users/veering_windows/anaconda3/envs/r-reticulate/python.exe")
 
 model <- keras_model_sequential() %>%
   layer_dense(units = 19, activation = "relu", input_shape = c(ncol(testPred))) %>%

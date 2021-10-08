@@ -14,6 +14,7 @@ library(tseries, quietly = TRUE)
 library(roll, quietly = TRUE)
 library(imputeFin, quietly = TRUE)
 library(foreach, quietly = TRUE)
+library(Hmisc, quietly = TRUE)
 
 ## Import Data change date into a meaningful format
 file <- "AUS_Data.xlsx" # set source data file name
