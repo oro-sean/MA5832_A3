@@ -235,9 +235,9 @@ modelData <-modelData[ ,names(modelData) %nin% toRemove] # remove junk features
 ## Build test training split, normalise data.
 
 testData <- modelData[modelData$Date > as.Date("2018-02-28"), c(-1)] # test Data all observations after 28 Feb 2018 (ie March 2018 onwards) removing Date as it will not be used
-trainData <- modelData[year(modelData$Date) <= as.Date("2018-02-28"), c(-1)] # train Data all other obs
+trainData <- modelData[modelData$Date <= as.Date("2018-02-28"), c(-1)] # train Data all other obs
 results <- modelData[modelData$Date > as.Date("2018-02-28"), c(1,2)] # test response and date (for plotting later)
-trainAss <- modelData[year(modelData$Date) <= as.Date("2018-02-28"), c(1,2)] # training response and date 
+trainAss <- modelData[modelData$Date <= as.Date("2018-02-28"), c(1,2)] # training response and date 
 
 mean <- apply(trainData[ , -1], 2, mean) # calculate mean for each variable
 std <- apply(trainData[ , -1], 2, sd) # calculate SD for each variable
@@ -248,6 +248,12 @@ testResponse = testData[,1] # make response list
 trainPred = scale(trainData[ ,-1], center = mean, scale = std) # scale training data and make pred df 
 trainResponse = trainData[, 1] # make train response df
 
+## check data splits make sense
+nrow(modelData)
+nrow(trainPred)
+length(trainResponse)
+nrow(testPred)
+length(testResponse)
 ## Save objects for use in various models
 saveRDS(list(rawData, modelData, testData, trainData, results, trainAss, testPred, testResponse, trainPred, trainResponse, mean, std), "data.RDS")
 
