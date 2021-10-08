@@ -14,9 +14,9 @@ data <- readRDS(file = "data.RDS")
 results <- as.data.frame(data[5])
 trainAss <- as.data.frame(data[6])
 testPred <- as.data.frame(data[7])
-testResponse <- as.data.frame(data[8])
+testResponse <- unlist(data[8])
 trainPred <- as.data.frame(data[9])
-trainResponse <- as.data.frame(data[10])
+trainResponse <- unlist(data[10])
 
 
 model <- keras_model_sequential() %>%
