@@ -232,7 +232,7 @@ toRemove <- unique(toRemove) # unique names only
 length(toRemove) # check
 modelData <-modelData[ ,names(modelData) %nin% toRemove] # remove junk features
 
-## Build test training split, normalise data.
+## Build test training split, normalize data.
 
 testData <- modelData[modelData$Date > as.Date("2018-02-28"), c(-1)] # test Data all observations after 28 Feb 2018 (ie March 2018 onwards) removing Date as it will not be used
 trainData <- modelData[modelData$Date <= as.Date("2018-02-28"), c(-1)] # train Data all other obs

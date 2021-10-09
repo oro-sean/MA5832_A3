@@ -25,7 +25,7 @@ conda_list(conda = "auto")
 install_keras(method = "conda", conda = "auto", envname = "r-reticulate")
 conda_install("r-reticulate", "tensorflow")
 
-Sys.getenv()
+Sys.getenv("RETICULATE_PYTHON")
 Sys.setenv(RETICULATE_PYTHON = "C:/Users/veering_windows/anaconda3/envs/r-reticulate/python.exe")
 
 model <- keras_model_sequential() %>%
@@ -47,9 +47,12 @@ PlotData <- data.frame(x = c(5:ModelHistory$params$epochs), y = ModelHistory$met
 ggplot(PlotData, aes(x = x, y = y)) + geom_smooth() + xlab("Epoch") + ylab("Estimated Validation MAE loss")
 
 
-model %>% fit(trainPred, trainResponse, epochs = 90, batch_size = 8, validation_data = list(testPred, testResponse))
+model %>% fit(trainPred, trainResponse, epochs = 125, batch_size = 8, validation_data = list(testPred, testResponse))
 
 results <- model %>% evaluate(testPred, testResponse)
 
-model %>% predict(testPred)
+results$Predictions <- model %>% predict(testPred)
+trainAss$Predictions <- model %>% predict(trainPred)
 
+ggplot(data = results) + geom_line(aes(x = Date, y = Predictions), colour = "red") +geom_line(aes(x = Date, y = Y), colour = "blue") 
+ggplot(data = trainAss) + geom_line(aes(x = Date, y = Predictions), colour = "red") +geom_line(aes(x = Date, y = Y), colour = "blue") 
