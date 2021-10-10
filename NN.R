@@ -11,7 +11,8 @@ library(reticulate, quietly = TRUE)
 library(caret, quietly = TRUE)
 
 ## Set env variables and check Py
-Sys.setenv(RETICULATE_PYTHON = "/home/veering/anaconda3/envs/r-reticulate/bin/python") # for reticulate to call correct python environemnt
+#Sys.setenv(RETICULATE_PYTHON = "/home/veering/anaconda3/envs/r-reticulate/bin/python") # for reticulate to call correct python environemnt
+Sys.setenv(RETICULATE_PYTHON = "/home/sean/anaconda3/envs/r-reticulate/bin/python") # for reticulate to call correct python environemnt
 Sys.getenv("RETICULATE_PYTHON") # check Sys variable is correct
 py_config() # check python config
 
@@ -107,7 +108,7 @@ resultsGrid <- expand.grid(
 )
 
 ## Build and train each model over all 4 folds
-e <- 100 # define number of epochs
+e <- 300 # define number of epochs
 
 ## Call tensor board and define call backs
 tensorboard("my_log_dir")
@@ -179,6 +180,6 @@ for(tg in (1:nrow(tuneGrid))) { # iterate over each row of the tune grid
 finishTime <- Sys.time()
 
 ## save resultsGrid to RDS for use later
-saveRDS(resultsGrid,"resultsGrid_NN.RDS")
+saveRDS(resultsGrid,"resultsGrid_NN_gcloud.RDS")
 
 
