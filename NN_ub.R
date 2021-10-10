@@ -11,7 +11,7 @@ library(reticulate, quietly = TRUE)
 library(caret, quietly = TRUE)
 
 ## Set env variables and check Py
-Sys.setenv(RETICULATE_PYTHON = "/home/veering/anaconda3/envs/r-reticulate/bin/python") # for reticulate to call correct python environemnt
+Sys.setenv(RETICULATE_PYTHON = "/home/sean/anaconda3/envs/r-reticulate/bin/python") # for reticulate to call correct python environemnt
 Sys.getenv("RETICULATE_PYTHON") # check Sys variable is correct
 py_config() # check python config
 
@@ -43,8 +43,6 @@ typeof(trainPredictors)
 
 length(trainResponse)
 typeof(trainResponse)
-
-
 
 ## Define function to create sequential keras model with specified hidden layers and units.
 
@@ -122,7 +120,7 @@ test_tune_grid <- function(trainPredictors, trainResponse, testPredictors, testR
     callback_early_stopping( # call early stopping
       monitor = "val_loss", # use loss on validation set as metric
       min_delta = delta, # min change to metric
-      patience = 1) # epochs to tolerate < min change before stopping
+      patience = 10) # epochs to tolerate < min change before stopping
   )
   
   ## Build and train each model over all 4 folds
@@ -189,11 +187,19 @@ test_tune_grid <- function(trainPredictors, trainResponse, testPredictors, testR
 
 ## define paramaters for tuning grid
 k <- 4 # define number of folds
+<<<<<<< HEAD
 layers <- c(6,8,10,12) # define # layers to test
 units <- c(c(16,18,20)) # define # units to test
 batch <- c(2, 4) # batch size to trial
 e <- 500 # define number of epochs
 delta <- .00001
+=======
+layers <- c(6,7,8,9,10,11,12) # define # layers to test
+units <- c(c(16,17,18,19,20)) # define # units to test
+batch <- c(1, 2, 4) # batch size to trial
+e <- 500 # define number of epochs
+delta <- .000005
+>>>>>>> f094d8f7f9d36450354ba11d512ee41949f19b5d
 
 ## record start time
 start <- Sys.time()
