@@ -10,14 +10,13 @@ library(tensorflow, quietly = TRUE)
 library(reticulate, quietly = TRUE)
 library(caret, quietly = TRUE)
 
-## Set seed for keras
-set_random_seed(123)
-
 ## Set env variables and check Py
 Sys.setenv(RETICULATE_PYTHON = "/home/veering/anaconda3/envs/r-reticulate/bin/python") # for reticulate to call correct python environemnt
 Sys.getenv("RETICULATE_PYTHON") # check Sys variable is correct
 py_config() # check python config
 
+## Set seed for keras
+set_random_seed(123)
 
 data <- readRDS(file = "data.RDS") # import model data prerpared earlier and daved in RDS file
 plotData_test <- as.data.frame(data[5]) # test reponses and dates
