@@ -191,19 +191,19 @@ test_tune_grid <- function(trainPredictors, trainResponse, testPredictors, testR
 k <- 4 # define number of folds
 layers <- c(6,8,10,12) # define # layers to test
 units <- c(c(16,18,20)) # define # units to test
-batch <- c(1, 2, 4) # batch size to trial
+batch <- c(2, 4) # batch size to trial
 e <- 500 # define number of epochs
-delta <- .001
+delta <- .00001
 
 ## record start time
 start <- Sys.time()
 
-test_tune_grid(trainPredictors, trainResponse, testPredictors, testResponse, k, layers, units, batch, e, delta)
+resultsGrid <- test_tune_grid(trainPredictors, trainResponse, testPredictors, testResponse, k, layers, units, batch, e, delta)
 
 
 ## record finish time
 finishTime <- Sys.time()
 
 ## save resultsGrid to RDS for use later
-saveRDS(resultsGrid,"resultsGrid_NN_fine.RDS")
+saveRDS(resultsGrid,"resultsGrid_NN_fine_ubuntu.RDS")
 
