@@ -8,7 +8,7 @@ library(dplyr)
 
 ## define function to plot tuining grids
 GRID_PLOT <- function(resultsGrid){ # function to plot results from nn tuning grid
-names(resultsGrid) <- c("Fold", "Layers", "Units", "Batch Size","tg", "k", "MAE Train", "MAE Val", "# Epochs") # give training grid results meaning fulname
+names(resultsGrid) <- c("Fold", "Layers", "Units", "Batch Size", "Drop Out Rate", "tg", "k", "MAE Train", "MAE Val", "# Epochs") # give training grid results meaning fulname
 
 avgMAE <- resultsGrid %>% group_by(Layers, Units, `Batch Size`) %>%  # group by layer, unit and batch size
 filter(Units != 4) %>% # from inspection 4 units was woefully inaccurate so omit at this step to make plots clear
@@ -32,3 +32,26 @@ gridPlot_course <- GRID_PLOT(readRDS(file = "resultsGrid_NN_course_ubuntu.RDS"))
 
 ## plot the results from the fine tuining grid
 gridPlot_fine <- GRID_PLOT(readRDS(file = "resultsGrid_NN_fine_gcloud.RDS"))
+
+
+#GRID_PLOT <- function(resultsGrid){ # function to plot results from nn tuning grid
+
+resultsGrid<- as.data.frame(readRDS(file = "resultsGrid_NN_reg_gcloud.RDS"))
+
+names(resultsGrid) <- c("Fold", "Layers", "Units", "Batch Size", "Drop Out Rate", "tg", "k", "MAE Train", "MAE Val", "# Epochs") # give training grid results meaning fulname
+  
+  avgMAE <- resultsGrid %>% group_by(Layers, Units, `Batch Size`, `Drop Out Rate`) %>%  # group by layer, unit and batch size
+    filter(Units != 4) %>% # from inspection 4 units was woefully inaccurate so omit at this step to make plots clear
+    summarize(`MAE Train` = mean(`MAE Train`), `MAE Val` = mean(`MAE Val`)) # calculate average (over the k folds) MAE for training and validation set for each combination of layers, units and batch size
+
+  grid_plot <- ggplot(data = avgMAE) + 
+    geom_point(aes(x = `Drop Out Rate`, y = `MAE Train`), colour = "Red") + # add points for each value of units
+    geom_line(aes(x = `Drop Out Rate`, y = `MAE Train`), colour = "Red") + # add lines for each value of units
+    geom_point(aes(x = `Drop Out Rate`, y = `MAE Val`), colour = "Green") +  # repeat for validation MAE
+    geom_line(aes(x = `Drop Out Rate`, y = `MAE Val`), colour = "Green", linetype = "dashed") +
+    labs(title = "MAE vs Layers by Units and Batch Size", Y = "Mean Absolute Error (MAE)") +
+    theme_classic()
+  grid_plot
+#}
+
+
