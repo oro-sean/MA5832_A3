@@ -140,7 +140,7 @@ build_model_reg <- function(l, u, is, opt, loss, met, dr){ # function recieves #
   )
 }
 
-test_tune_grid <- function(model_builder, trainPredictors, trainResponse, k, layers, units, batch, e, delta, patience, dropout){
+test_tune_grid <- function(model_builder, trainPredictors, trainResponse, k, layers, units, batch, e, delta, patience, dropout, aim){
   ## Create 4 x splits set from training data for validation
   
   set.seed(123) # set seed
@@ -183,6 +183,8 @@ test_tune_grid <- function(model_builder, trainPredictors, trainResponse, k, lay
   ## Build and train each model over all 4 folds
   
   rg <- 1 # results grid counter
+  histVal  <- NULL # reserve variable name
+  histTrain <- NULL # reserve variable name
   
   ## Train models and record results
   for(tg in (1:nrow(tuneGrid))) { # iterate over each row of the tune grid
@@ -218,7 +220,7 @@ test_tune_grid <- function(model_builder, trainPredictors, trainResponse, k, lay
                            opt = "adam", # optimiser
                            loss = "mse", # loss function
                            met = "mae", # metrics
-                           dr = dropout # dropout rate
+                           dr = tuneGrid[tg, 4] # dropout rate
       ) 
 
       ## Fit model
@@ -234,21 +236,35 @@ test_tune_grid <- function(model_builder, trainPredictors, trainResponse, k, lay
       )
       
       ## return metrics of interest to resultsGrid
+      if(aim == 1){ # only if aim = 1
       resultsGrid$tg[rg] <- tg # store tg number for result traceability
       resultsGrid$i[rg] <- i # return fold number for result traceability
       resultsGrid$mae[rg] <- min(history$metrics$mae) # assume the min value is the final value (ok for selecting HP with call back early stopping)
       resultsGrid$mae_val[rg] <- min(history$metrics$val_mae)
       resultsGrid$num_epoch[rg] <- length(history$metrics$mae) # count epoch's by length of metric vector as it stops when call back stops training
+      }
+      
+      ## return metric for each epoch
+      if(aim ==2){ # only if aim = 2
+      hist <- history$metrics$val_mean_absolute_error # return validation MAE for each epoch
+      histVal <- rbind(histAll, hist) # combine with other folds
+      hist <- history$metrics$mean_absolute_error # return validation MAE for each epoch
+      histTrain <- rbind(histTrain, hist) # combine with other folds
+      }
       
       rg <- rg + 1 # increase results grid counter by 1
+      
     }
   }
   
-  return(resultsGrid)
+  if(aim == 1)  return(resultsGrid)
+  if(aim == 2)  return(list(histVal, histTrain))
+  if(aim == 3)  return(model)
 }
 
 ## Course Tune
 
+## record start time
 ## record start time
 startTime <- Sys.time()
 
@@ -263,7 +279,8 @@ resultsGrid <- test_tune_grid( # call test tuen grid to build and test model wit
   e = 300, # define number of epochs (note --> callback is used so rarley will this number be achieved)
   delta = .001, # set delta for call back end training
   patience = 5, # set patience for call back end training
-  dropout = 0 # regulations parameter, not used in this tune
+  dropout = 0, # regulations parameter, not used in this tune
+  aim = 1 # set aim to return the results gris (ie train and Val MAE)
   )
 
 ## record finish time
@@ -276,7 +293,8 @@ saveRDS(resultsGrid,"resultsGrid_NN_course_gloud.RDS")
 ## Fine Tune
 
 ## record start time
-start <- Sys.time()
+## record start time
+startTime <- Sys.time()
 
 resultsGrid <- test_tune_grid( # call test tune grid to build and test model with the following parameters
   model_builder = build_model, # use the model builder without regulisation
@@ -289,7 +307,8 @@ resultsGrid <- test_tune_grid( # call test tune grid to build and test model wit
   e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
   delta = .000005, # set delta for call back end training
   patience = 10, # set patience for call back end training
-  dropout = 0 # regulations parameter, not used in this tune
+  dropout = 0, # regulations parameter, not used in this tune
+  aim = 1 # set aim to return the results gris (ie train and Val MAE)
 )
 
 ## record finish time
@@ -302,10 +321,11 @@ saveRDS(resultsGrid,"resultsGrid_NN_fine_gcloud.RDS")
 ## Investigate regulization
 
 ## record start time
-start <- Sys.time()
+## record start time
+startTime <- Sys.time()
 
 resultsGrid <- test_tune_grid( # call test tune grid to build and test model with the following parameters
-  model_builder = build_model, # use the model builder without regulisation
+  model_builder = build_model_reg, # use the model builder without regulisation
   trainPredictors = trainPredictors, # pass all training predictors
   trainResponse = trainResponse, # pass all training responses
   k = 4, # Define # folds for k folds cross validation
@@ -315,7 +335,37 @@ resultsGrid <- test_tune_grid( # call test tune grid to build and test model wit
   e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
   delta = .00000005, # set delta for call back end training
   patience = 10, # set patience for call back end training
-  dropout = c(0.2,0.4,0.6) # regulations parameter
+  dropout = c(0.2,0.4,0.6), # regulations parameter
+  aim = 1 # set aim to return the results gris (ie train and Val MAE)
+)
+
+## record finish time
+finishTime <- Sys.time()
+runTime_reg <- finishTime - startTime
+
+## save resultsGrid to RDS for use later
+saveRDS(resultsGrid,"resultsGrid_NN_reg_gcloud.RDS")
+
+## Build 2 final models for comparison and assessment one with drop out one with out
+
+## record start time
+startTime <- Sys.time()
+
+history_19_11 <- test_tune_grid( # call test tune grid to build and test model with the following parameters
+  model_builder = build_model, # use the model builder without regulisation
+  trainPredictors = trainPredictors, # pass all training predictors
+  trainResponse = trainResponse, # pass all training responses
+  k = 4, # Define # folds for k folds cross validation
+  layers = c(11), # freeze layers from previous investigation
+  units = c(19), # freeze units from previous investigation
+  batch = c(2), # freeze batch from previous investigation
+  e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
+  #delta = .00000005, # set delta for call back end training
+  #patience = 10, # set patience for call back end training
+  delta = .1, # set delta for call back end training
+  patience = 0, # set patience for call back end training
+  dropout = c(0), # regulations parameter
+  aim = 2 # set aim to return the results gris (ie train and Val MAE)
 )
 
 ## record finish time
