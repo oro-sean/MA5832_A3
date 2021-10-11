@@ -346,6 +346,7 @@ saveRDS(resultsGrid,"resultsGrid_NN_reg_gcloud.RDS")
 ## record start time
 startTime <- Sys.time()
 
+## No reg
 history_19_11 <- test_tune_grid( # call test tune grid to build and test model with the following parameters
   model_builder = build_model, # use the model builder without regulisation
   trainPredictors = trainPredictors, # pass all training predictors
@@ -355,18 +356,34 @@ history_19_11 <- test_tune_grid( # call test tune grid to build and test model w
   units = c(19), # freeze units from previous investigation
   batch = c(2), # freeze batch from previous investigation
   e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
-  #delta = .00000005, # set delta for call back end training
-  #patience = 10, # set patience for call back end training
-  delta = .1, # set delta for call back end training
-  patience = 0, # set patience for call back end training
+  delta = 0, # set delta for call back end training
+  patience = 500, # effectively turn off stop early
   dropout = c(0), # regulations parameter
   aim = 2 # set aim to return the results gris (ie train and Val MAE)
 )
 
+## save history_19_11 to RDS for use later
+saveRDS(history_19_11,"history_19_11.RDS")
+
+## Reg
+history_19_11_reg <- test_tune_grid( # call test tune grid to build and test model with the following parameters
+  model_builder = build_model_reg, # use the model builder without regulisation
+  trainPredictors = trainPredictors, # pass all training predictors
+  trainResponse = trainResponse, # pass all training responses
+  k = 4, # Define # folds for k folds cross validation
+  layers = c(11), # freeze layers from previous investigation
+  units = c(19), # freeze units from previous investigation
+  batch = c(2), # freeze batch from previous investigation
+  e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
+  delta = 0, # set delta for call back end training
+  patience = 500, # effectively turn off stop early
+  dropout = c(0), # regulations parameter
+  aim = 2 # set aim to return the results gris (ie train and Val MAE)
+)
+
+## save history_19_11 to RDS for use later
+saveRDS(history_19_11_reg,"history_19_11_reg.RDS")
+
 ## record finish time
 finishTime <- Sys.time()
 runTime_ft <- finishTime - startTime
-
-## save resultsGrid to RDS for use later
-saveRDS(resultsGrid,"resultsGrid_NN_reg_gcloud.RDS")
-
