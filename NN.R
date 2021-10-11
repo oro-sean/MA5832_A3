@@ -2,7 +2,7 @@
 rm(list = ls()) # removes all variables
 if(!is.null(dev.list())) dev.off() # clear plots
 cat("\014") # clear console
-.rs.restartR() # restart r session to disocnect any old python attachments
+.rs.restartR() # restart r session to disconnected any old python attachments
 
 library(keras, quietly = TRUE)
 library(ggplot2, quietly = TRUE)
@@ -20,6 +20,8 @@ py_config() # check python config
 set_random_seed(123)
 
 ## Read data in
+Time <- Sys.time() # record start time
+
 #####
 data <- readRDS(file = "data.RDS") # import model data prerpared earlier and daved in RDS file
 plotData_test <- as.data.frame(data[5]) # test reponses and dates
@@ -288,7 +290,7 @@ resultsGrid <- test_tune_grid( # call test tuen grid to build and test model wit
 
 ## record finish time
 finishTime <- Sys.time()
-runTime_ct <- finishTime - startTime
+(runTime_ct <- difftime(finishTime, startTime))
 #####
 ## save resultsGrid to RDS for use later
 saveRDS(resultsGrid,"resultsGrid_NN_course_gloud.RDS")
@@ -316,7 +318,7 @@ resultsGrid <- test_tune_grid( # call test tune grid to build and test model wit
 
 ## record finish time
 finishTime <- Sys.time()
-runTime_ft <- finishTime - startTime
+(runTime_ft <- difftime(finishTime, startTime))
 #####
 ## save resultsGrid to RDS for use later
 saveRDS(resultsGrid,"resultsGrid_NN_fine_gcloud.RDS")
@@ -344,7 +346,7 @@ resultsGrid <- test_tune_grid( # call test tune grid to build and test model wit
 
 ## record finish time
 finishTime <- Sys.time()
-runTime_reg <- finishTime - startTime
+(runTime_reg <- difftime(finishTime, startTime))
 #####
 ## save resultsGrid to RDS for use later
 saveRDS(resultsGrid,"resultsGrid_NN_reg_gcloud.RDS")
@@ -391,14 +393,16 @@ history_19_11_reg <- test_tune_grid( # call test tune grid to build and test mod
 
 ## record finish time
 finishTime <- Sys.time()
-runTime_ft <- finishTime - startTime
+(runTime_mods <- difftime(finishTime, startTime))
 #####
 ## save history_19_11 to RDS for use later
 saveRDS(history_19_11_reg,"history_19_11_reg.RDS")
 
 ## Build final model epochs = 50, no regulation and fit to training data, then test on test data
 #####
-## Build Model
+## Build Model]
+startTime <- Sys.time() # set start time
+
 tensorboard("my_log_dir") # call tensor board
 
 callbacks = list( # only call back TB, no need to stop training early as we have selected the desired number of epochs
@@ -442,4 +446,9 @@ finalResults <- list(resultsTest, # list all relevant results for export
                      resultsTraining, 
                      timeSeriesData)
 
+finishTime <- Sys.timme() # Set finish time
+(runTime_mod <- difftime(finishTime, startTime))
+(runTime_all <- difftime(finishTime, Time))
 saveRDS(finalResults, file = "finalResults_gloud.RDS")
+saveRDS(list(runTime_ct, runTime_ft, runTime_reg, runTime_mods, runTime_mod, runTime_all), file = "runTimes_gcloud.RDS")
+
