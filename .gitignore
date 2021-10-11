@@ -40,3 +40,4 @@ vignettes/*.pdf
 
 # Raw Data
 AUS_Data.xlsx
+my_log_dir
