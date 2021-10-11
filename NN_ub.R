@@ -11,13 +11,13 @@ library(reticulate, quietly = TRUE)
 library(caret, quietly = TRUE)
 
 ## Set env variables and check Py
-Sys.setenv(RETICULATE_PYTHON = "/home/sean/anaconda3/envs/r-reticulate/bin/python") # for reticulate to call correct python environemnt
+# Sys.setenv(RETICULATE_PYTHON = "/home/sean/anaconda3/envs/r-reticulate/bin/python") # for reticulate to call correct python environemnt Google Cloud
+Sys.setenv(RETICULATE_PYTHON = "/home/veering/anaconda3/envs/r-reticulate/bin/python") # for reticulate to call correct python environemnt mbp
 Sys.getenv("RETICULATE_PYTHON") # check Sys variable is correct
 py_config() # check python config
 
 ## Set seed for keras
 set_random_seed(123)
-
 
 data <- readRDS(file = "data.RDS") # import model data prerpared earlier and daved in RDS file
 plotData_test <- as.data.frame(data[5]) # test reponses and dates
@@ -27,7 +27,6 @@ testResponse <- as.numeric(unlist(data[8])) # test response, numeric vec for tf
 trainPredictors <- as.matrix(as.data.frame(data[9])) # training predictors, as matrix for tf
 trainResponse <- as.numeric(unlist(data[10])) # training response, as matrix for tf
 
-#####
 ## check dimensions and type of all data
 dim(plotData_test)
 typeof(plotData_test)
