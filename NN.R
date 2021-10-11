@@ -247,7 +247,7 @@ test_tune_grid <- function(model_builder, trainPredictors, trainResponse, k, lay
       ## return metric for each epoch
       if(aim ==2){ # only if aim = 2
       hist <- history$metrics$val_mean_absolute_error # return validation MAE for each epoch
-      histVal <- rbind(histAll, hist) # combine with other folds
+      histVal <- rbind(histVal, hist) # combine with other folds
       hist <- history$metrics$mean_absolute_error # return validation MAE for each epoch
       histTrain <- rbind(histTrain, hist) # combine with other folds
       }
