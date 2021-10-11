@@ -56,24 +56,36 @@ reg_plot <- ggplot(data = avgMAE) + # Create Plot
 reg_plot
 
 ## plot mae vs epoch for reg and no reg
-history <- readRDS(file = "history_19_11.RDS") # import data
+HIST_TO_PLOT <- function(history, reg){
 historyVal <- history[[1]] # unlist validation and training MAE
 historyTrain <- history[[2]]
 plotData <- data.frame(epochs = seq(1:ncol(historyVal)), # create epochs variable as seq to end of mae
-                       regulisation = rep("None", ncol(historyVal)), # add note that these are unregulised
+                       regulisation = rep(reg, ncol(historyVal)), # add note that these are unregulised
                        Validation = apply(historyVal, 2, mean), # average validation MAE over all folds
                        Training = apply(historyTrain, 2, mean)) # average training MAE over all folds
+}
 
-history <- readRDS(file = "history_19_11_reg.RDS") # import data
-historyVal <- history[[1]] # unlist validation and training MAE
-historyTrain <- history[[2]]
-plotData2 <- data.frame(epochs = seq(1:ncol(historyVal)), # create epochs variable as seq to end of mae
-                       regulisation = rep("Drop Out", ncol(historyVal)), # add note that these are unregulised
-                       `AVG MAE Validation` = apply(historyVal, 2, mean), # average validation MAE over all folds
-                       `AVG MAR Training` = apply(historyTrain, 2, mean)) # average training MAE over all folds
-plotData <- rbind(plotData, plotData2) # combine both normalised 
-plotData <- melt(plotData, id.vars = c("epochs", "regulisation"))
-ggplot(plotData, aes(x = epochs, y = value, colour = variable)) + geom_smooth() + facet_wrap(plotData$regulisation)
+plotData <- rbind( # Build plot Data Data frame by combining both regulated and uin regulated model history
+  HIST_TO_PLOT( # call function to average valdiation and training MAE's
+    readRDS(file = "history_19_11.RDS"), # import list of training and validation MAE's
+    "Without Regulation"), # specify no regulation
+  HIST_TO_PLOT( # call function to average over folds
+    readRDS(file = "history_19_11_reg.RDS"), # read regulated model history
+            "With Dropout Regulation") # Specify Regulated 
+)
+plotData <- melt(plotData, id.vars = c("epochs", "regulisation")) # melt Data for plotting
+plotData <- plotData %>% filter(epochs <= 250)
+
+epochs_plot_comb <- ggplot(plotData, aes(x = epochs, y = value, colour = variable)) + # plot with GG
+  geom_smooth(span = 0.5) + # add smoothing
+  facet_wrap(plotData$regulisation) + # facet wrap regulisation
+  theme_classic() +
+  labs(title = "MAE Vs # Epochs for net with and without regulisation", 
+       y = "Mean Absolute error (MAE)",
+       x = "# Epochs")
+
+epochs_plot_comb 
+
 
 
 
