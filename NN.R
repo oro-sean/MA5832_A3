@@ -355,9 +355,9 @@ history_19_11 <- test_tune_grid( # call test tune grid to build and test model w
   layers = c(11), # freeze layers from previous investigation
   units = c(19), # freeze units from previous investigation
   batch = c(2), # freeze batch from previous investigation
-  e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
+  e = 200, # define number of epochs (note --> callback is used so rarley will this number be achieved)
   delta = 0, # set delta for call back end training
-  patience = 500, # effectively turn off stop early
+  patience = 200, # effectively turn off stop early
   dropout = c(0), # regulations parameter
   aim = 2 # set aim to return the results gris (ie train and Val MAE)
 )
@@ -374,9 +374,9 @@ history_19_11_reg <- test_tune_grid( # call test tune grid to build and test mod
   layers = c(11), # freeze layers from previous investigation
   units = c(19), # freeze units from previous investigation
   batch = c(2), # freeze batch from previous investigation
-  e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
+  e = 200, # define number of epochs (note --> callback is used so rarley will this number be achieved)
   delta = 0, # set delta for call back end training
-  patience = 500, # effectively turn off stop early
+  patience = 200, # effectively turn off stop early
   dropout = c(2), # regulations parameter
   aim = 2 # set aim to return the results gris (ie train and Val MAE)
 )
