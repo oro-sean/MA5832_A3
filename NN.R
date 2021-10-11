@@ -183,8 +183,8 @@ test_tune_grid <- function(model_builder, trainPredictors, trainResponse, k, lay
   ## Build and train each model over all 4 folds
   
   rg <- 1 # results grid counter
-  histVal  <- NULL # reserve variable name
-  histTrain <- NULL # reserve variable name
+  histVal  <- c() # reserve variable name
+  histTrain <- c() # reserve variable name
   
   ## Train models and record results
   for(tg in (1:nrow(tuneGrid))) { # iterate over each row of the tune grid
@@ -236,22 +236,17 @@ test_tune_grid <- function(model_builder, trainPredictors, trainResponse, k, lay
       )
       
       ## return metrics of interest to resultsGrid
-      if(aim == 1){ # only if aim = 1
       resultsGrid$tg[rg] <- tg # store tg number for result traceability
       resultsGrid$i[rg] <- i # return fold number for result traceability
       resultsGrid$mae[rg] <- min(history$metrics$mae) # assume the min value is the final value (ok for selecting HP with call back early stopping)
       resultsGrid$mae_val[rg] <- min(history$metrics$val_mae)
       resultsGrid$num_epoch[rg] <- length(history$metrics$mae) # count epoch's by length of metric vector as it stops when call back stops training
-      }
+     
       
       ## return metric for each epoch
-      if(aim ==2){ # only if aim = 2
-      hist <- history$metrics$val_mean_absolute_error # return validation MAE for each epoch
-      histVal <- rbind(histVal, hist) # combine with other folds
-      hist <- history$metrics$mean_absolute_error # return validation MAE for each epoch
-      histTrain <- rbind(histTrain, hist) # combine with other folds
-      }
-      
+      histVal <- rbind(histVal, history$metrics$val_mae) # combine with other folds
+      histTrain <- rbind(histTrain, history$metrics$mae) # combine with other folds
+
       rg <- rg + 1 # increase results grid counter by 1
       
     }
