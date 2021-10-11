@@ -323,7 +323,7 @@ finishTime <- Sys.time()
 ## save resultsGrid to RDS for use later
 saveRDS(resultsGrid,"resultsGrid_NN_fine_gcloud.RDS")
 
-## Investigate regulization
+## Investigate regularization
 #####
 ## record start time
 ## record start time
@@ -400,7 +400,7 @@ saveRDS(history_19_11_reg,"history_19_11_reg.RDS")
 
 ## Build final model epochs = 50, no regulation and fit to training data, then test on test data
 #####
-## Build Model]
+## Build Model
 startTime <- Sys.time() # set start time
 
 tensorboard("my_log_dir") # call tensor board
@@ -434,8 +434,8 @@ resultsTest <- model_final %>% evaluate(testPredictors, testResponse) # calculat
 resultsTraining <- model_final %>% evaluate(trainPredictors, trainResponse) # calculate fit on training Data
 
 ## Predict unemployment using the test and training predictors
-plotData_test <- model %>% predict(testPredictors) %>% as.numeric() # return test predictions to new column in plotData_test
-trainAss$Predictions <- model %>% predict(trainPred) %>% as.numeric() # return training predictions to new column in plotData Train
+plotData_test$Predictions <- model_final %>% predict(testPredictors) %>% as.numeric() # return test predictions to new column in plotData_test
+plotData_train$Predictions <- model_final %>% predict(trainPredictors) %>% as.numeric() # return training predictions to new column in plotData Train
 plotData_test$Split <- rep("Test", nrow(plotData_test)) # add note that these values are from test split
 plotData_train$Split <- rep("Train", nrow(plotData_train)) # add note that these values are from training split
 
@@ -445,10 +445,10 @@ timeSeriesData <- rbind(plotData_train, # combine all predictions into a single 
 finalResults <- list(resultsTest, # list all relevant results for export
                      resultsTraining, 
                      timeSeriesData)
-
+#####
 finishTime <- Sys.timme() # Set finish time
 (runTime_mod <- difftime(finishTime, startTime))
 (runTime_all <- difftime(finishTime, Time))
-saveRDS(finalResults, file = "finalResults_gloud.RDS")
+saveRDS(finalResults, file = "finalResults_gcloud.RDS")
 saveRDS(list(runTime_ct, runTime_ft, runTime_reg, runTime_mods, runTime_mod, runTime_all), file = "runTimes_gcloud.RDS")
 
