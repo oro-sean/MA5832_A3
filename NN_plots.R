@@ -59,11 +59,21 @@ reg_plot
 history <- readRDS(file = "history_19_11.RDS") # import data
 historyVal <- history[[1]] # unlist validation and training MAE
 historyTrain <- history[[2]]
-plotData <- data.frame(epochs = seq(1:ncol(historyVal)), # create epochs variable as seq to end of mae 
+plotData <- data.frame(epochs = seq(1:ncol(historyVal)), # create epochs variable as seq to end of mae
+                       regulisation = rep("None", ncol(historyVal)), # add note that these are unregulised
+                       Validation = apply(historyVal, 2, mean), # average validation MAE over all folds
+                       Training = apply(historyTrain, 2, mean)) # average training MAE over all folds
+
+history <- readRDS(file = "history_19_11_reg.RDS") # import data
+historyVal <- history[[1]] # unlist validation and training MAE
+historyTrain <- history[[2]]
+plotData2 <- data.frame(epochs = seq(1:ncol(historyVal)), # create epochs variable as seq to end of mae
+                       regulisation = rep("Drop Out", ncol(historyVal)), # add note that these are unregulised
                        `AVG MAE Validation` = apply(historyVal, 2, mean), # average validation MAE over all folds
                        `AVG MAR Training` = apply(historyTrain, 2, mean)) # average training MAE over all folds
-plotData <- melt(plotData, id.vars = "epochs")
-ggplot(plotData, aes(x = epochs, y = value, colour = variable)) + geom_smooth()
+plotData <- rbind(plotData, plotData2) # combine both normalised 
+plotData <- melt(plotData, id.vars = c("epochs", "regulisation"))
+ggplot(plotData, aes(x = epochs, y = value, colour = variable)) + geom_smooth() + facet_wrap(plotData$regulisation)
 
 
 
