@@ -377,7 +377,7 @@ history_19_11_reg <- test_tune_grid( # call test tune grid to build and test mod
   e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
   delta = 0, # set delta for call back end training
   patience = 500, # effectively turn off stop early
-  dropout = c(0), # regulations parameter
+  dropout = c(2), # regulations parameter
   aim = 2 # set aim to return the results gris (ie train and Val MAE)
 )
 
