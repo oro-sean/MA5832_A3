@@ -1,7 +1,6 @@
 rm(list = ls()) # removes all variables
 if(!is.null(dev.list())) dev.off() # clear plots
 cat("\014") # clear console
-.rs.restartR() # restart r session to disocnect any old python attachments
 
 library(ggplot2, quietly = TRUE)
 library(dplyr, quietly = TRUE)
@@ -37,21 +36,24 @@ gridPlot_course
 ## plot the results from the fine tuining grid
 gridPlot_fine <- GRID_PLOT(readRDS(file = "resultsGrid_NN_fine_gcloud.RDS"))
 gridPlot_fine
+
+
 ## plot results for regulization
-
 resultsGrid<- as.data.frame(readRDS(file = "resultsGrid_NN_reg_gcloud.RDS")) # import results from RDS
-
 names(resultsGrid) <- c("Fold", "Layers", "Units", "Batch Size", "Drop Out Rate", "tg", "k", "MAE Train", "MAE Val", "# Epochs") # give training grid results meaning fulname
+resultsGrid$`Drop Out Rate` <- as.factor(resultsGrid$`Drop Out Rate`) # make dr a factor
 
-avgMAE <- resultsGrid %>% group_by(Layers, Units, `Batch Size`, `Drop Out Rate`) %>%  # group by layer, unit and batch size
-  summarize(`MAE Train` = mean(`MAE Train`), `MAE Val` = mean(`MAE Val`)) # calculate average (over the k folds) MAE for training and validation set for each combination of layers, units and batch size
+avgMAE <- resultsGrid %>% group_by(Layers, `Drop Out Rate`) %>%  # group by layer, unit and drop out rate
+  summarize(`MAE Train` = mean(`MAE Train`), `MAE Val` = mean(`MAE Val`), epoch = median(`# Epochs`)) # calculate average (over the k folds) MAE for training and validation set for each combination of layers, units and batch size
 
 reg_plot <- ggplot(data = avgMAE) + # Create Plot
-  geom_point(aes(x = `Drop Out Rate`, y = `MAE Train`), colour = "Red") + # add points for each value of units
-  geom_line(aes(x = `Drop Out Rate`, y = `MAE Train`), colour = "Red") + # add lines for each value of units
-  geom_point(aes(x = `Drop Out Rate`, y = `MAE Val`), colour = "Green") +  # repeat for validation MAE
-  geom_line(aes(x = `Drop Out Rate`, y = `MAE Val`), colour = "Green", linetype = "dashed") +
-  labs(title = "MAE vs Drop Out Rate", Y = "Mean Absolute Error (MAE)") +
+  geom_point(aes(x = Layers, y = `MAE Train`, color = `Drop Out Rate`)) + 
+  geom_line(aes(x = Layers, y = `MAE Train`, color = `Drop Out Rate`)) + 
+  geom_point(aes(x = Layers, y = `MAE Val`, color = `Drop Out Rate`)) + 
+  geom_line(aes(x = Layers, y = `MAE Val`, color = `Drop Out Rate`), linetype = "dashed") +
+  geom_text(aes(x = avgMAE$Layers, y = 1.6, label = paste("Median # epochs - ", "\n", median(avgMAE$epoch))))+
+  labs(title = "MAE vs Layers for various drop out rates", Y = "Mean Absolute Error (MAE)") +
+  
   theme_light()
 reg_plot
 
@@ -67,17 +69,17 @@ plotData <- data.frame(epochs = seq(1:ncol(historyVal)), # create epochs variabl
 
 plotData <- rbind( # Build plot Data Data frame by combining both regulated and uin regulated model history
   HIST_TO_PLOT( # call function to average valdiation and training MAE's
-    readRDS(file = "history_19_11.RDS"), # import list of training and validation MAE's
+    readRDS(file = "history_21_12.RDS"), # import list of training and validation MAE's
     "Without Regulation"), # specify no regulation
   HIST_TO_PLOT( # call function to average over folds
-    readRDS(file = "history_19_11_reg.RDS"), # read regulated model history
+    readRDS(file = "history_20_36_reg_04.RDS"), # read regulated model history
             "With Dropout Regulation") # Specify Regulated 
 )
 plotData <- melt(plotData, id.vars = c("epochs", "regulisation")) # melt Data for plotting
 plotData <- plotData %>% filter(epochs <= 250)
 
 epochs_plot_comb <- ggplot(plotData, aes(x = epochs, y = value, colour = variable)) + # plot with GG
-  geom_smooth(span = 0.5) + # add smoothing
+  geom_smooth() + # add smoothing
   facet_wrap(plotData$regulisation) + # facet wrap regulisation
   theme_classic() +
   labs(title = "MAE Vs # Epochs for net with and without regulisation", 
