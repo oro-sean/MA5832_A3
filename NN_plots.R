@@ -32,11 +32,11 @@ GRID_PLOT <- function(resultsGrid){ # function to plot results from nn tuning gr
 }
 
 ## plot the results from the corse tuning grid
-gridPlot_course <- GRID_PLOT(readRDS(file = "resultsGrid_NN_course_ubuntu.RDS"))
-
+gridPlot_course <- GRID_PLOT(readRDS(file = "resultsGrid_NN_course_gloud.RDS"))
+gridPlot_course
 ## plot the results from the fine tuining grid
 gridPlot_fine <- GRID_PLOT(readRDS(file = "resultsGrid_NN_fine_gcloud.RDS"))
-
+gridPlot_fine
 ## plot results for regulization
 
 resultsGrid<- as.data.frame(readRDS(file = "resultsGrid_NN_reg_gcloud.RDS")) # import results from RDS
@@ -52,7 +52,7 @@ reg_plot <- ggplot(data = avgMAE) + # Create Plot
   geom_point(aes(x = `Drop Out Rate`, y = `MAE Val`), colour = "Green") +  # repeat for validation MAE
   geom_line(aes(x = `Drop Out Rate`, y = `MAE Val`), colour = "Green", linetype = "dashed") +
   labs(title = "MAE vs Drop Out Rate", Y = "Mean Absolute Error (MAE)") +
-  theme_classic()
+  theme_light()
 reg_plot
 
 ## plot mae vs epoch for reg and no reg
@@ -86,6 +86,16 @@ epochs_plot_comb <- ggplot(plotData, aes(x = epochs, y = value, colour = variabl
 
 epochs_plot_comb 
 
+## Plot final time series
 
+finalResults <- readRDS(file = "finalResults_gcloud.RDS") # import final results RDS
+MAEtest <- finalResults[[1]] # extract test MAE
+MAEtrain <- finalResults[[2]] # extract training MAE
+timeSeries <- finalResults[[3]] # extract time series predictions
+timeSeries$Split <- as.factor(timeSeries$Split) # make Split a factor
 
-
+ts_plot <- ggplot(data = timeSeries) + # use time series data to make plot
+  geom_line(aes(x = Date, y = Y), colour = "blue") + # plot actual unemployment in blue
+  geom_line(aes(x = Date, y = Predictions, color = Split)) +
+  theme_light()
+ts_plot
