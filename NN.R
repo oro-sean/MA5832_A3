@@ -472,18 +472,18 @@ history_21_12 <- test_tune_grid( # call test tune grid to build and test model w
 saveRDS(history_21_12,"history_21_12.RDS")
 
 ## Reg
-history_21_12_reg <- test_tune_grid( # call test tune grid to build and test model with the following parameters
+history_20_36_reg <- test_tune_grid( # call test tune grid to build and test model with the following parameters
   model_builder = build_model_reg, # use the model builder without regulisation
   trainPredictors = trainPredictors, # pass all training predictors
   trainResponse = trainResponse, # pass all training responses
   k = 4, # Define # folds for k folds cross validation
-  layers = c(12), # freeze layers from previous investigation
-  units = c(21), # freeze units from previous investigation
+  layers = c(36), # freeze layers from previous investigation
+  units = c(20), # freeze units from previous investigation
   batch = c(2), # freeze batch from previous investigation
   e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
   delta = 0, # set delta for call back end training
   patience = 500, # effectively turn off stop early
-  dropout = c(0.2), # regulations parameter
+  dropout = c(0.4), # regulations parameter
   aim = 2 # set aim to return the results gris (ie train and Val MAE)
 )
 
@@ -492,7 +492,7 @@ finishTime <- Sys.time()
 (runTime_mods <- difftime(finishTime, startTime))
 #####
 ## save history_19_11 to RDS for use later
-saveRDS(history_21_12_reg,"history_12_12_reg.RDS")
+saveRDS(history_20_36_reg,"history_20_36_reg_04.RDS")
 
 ## Build final model epochs = 50, no regulation and fit to training data, then test on test data
 #####
@@ -507,8 +507,8 @@ startTime <- Sys.time() # set start time
     #histogram_freq = 1))
 
 model_final <- build_model( # use the model builder without regulisation to build model
-  l = 11, # build model with 11 layers
-  u = 19,  # build model with 19 units
+  l = 12, # build model with 11 layers
+  u = 21,  # build model with 19 units
   is = ncol(trainPredictors), # input shape 
   opt = "adam", # optimiser
   loss = "mse", # loss function
