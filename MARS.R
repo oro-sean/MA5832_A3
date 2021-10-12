@@ -27,8 +27,8 @@ MARS_TUNE <- train(x = trainPredictors, # use caret train to train the model on 
                    trControl = trainControl( method = "cv", # perform 10 fold cross validation
                                              number = 10),
                    tuneGrid = expand.grid(degree = 1:4, # tune for degree 1 --> 4
-                                          nprune = seq(5,45,5)) # tune over the range 4 --> 45
-                   )
+                                          nprune = seq(1,20,4) # tune over the range 1 --> 20
+                   ))
 
 ## Plot results
 ggplot(MARS_TUNE) + # quick plot of MAE vs prune and degree
