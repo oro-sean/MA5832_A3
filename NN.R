@@ -69,6 +69,38 @@ build_model <- function(l, u, is, opt, loss, met, dr){ # function recieves # lay
     layer_dense(unit = u, activation = "relu"),
     layer_dense(unit = u, activation = "relu"),
     layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dense(unit = u, activation = "relu"),
     layer_dense(unit = u, activation = "relu")
   )
   #####
@@ -96,6 +128,70 @@ build_model_reg <- function(l, u, is, opt, loss, met, dr){ # function recieves #
   outputLayer <- layer_dense(units = 1) # define output layer with no activation function and a single output, sutiable for regression
   hiddenLayer <- list( # define hidden layers as list of 16 dense layers with units u and activation "relu"
     #####
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
+    layer_dense(unit = u, activation = "relu"),
+    layer_dropout(rate = dr),
     layer_dense(unit = u, activation = "relu"),
     layer_dropout(rate = dr),
     layer_dense(unit = u, activation = "relu"),
@@ -180,11 +276,11 @@ test_tune_grid <- function(model_builder, trainPredictors, trainResponse, k, lay
   #####
   
   ## Call tensor board and define call backs
-  tensorboard("my_log_dir")
+  #tensorboard("my_log_dir")
   callbacks = list(
-    callback_tensorboard( # call TB
-      log_dir = "my_log_dir",
-      histogram_freq = 1),
+    #callback_tensorboard( # call TB
+    #  log_dir = "my_log_dir",
+    #  histogram_freq = 1),
     callback_early_stopping( # call early stopping
       monitor = "val_loss", # use loss on validation set as metric
       min_delta = delta, # min change to metric
@@ -306,12 +402,12 @@ resultsGrid <- test_tune_grid( # call test tune grid to build and test model wit
   trainPredictors = trainPredictors, # pass all training predictors
   trainResponse = trainResponse, # pass all training responses
   k = 4, # Define # folds for k folds cross validation
-  layers = c(6,7,8,9,10,11,12), # define # layers to test
-  units = c(16,17,18,19,20), # define # units to test
-  batch = c(1, 2, 4), # batch size to trial
-  e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
-  delta = .000005, # set delta for call back end training
-  patience = 10, # set patience for call back end training
+  layers = c(8,9,10,11,12), # define # layers to test
+  units = c(18,19,20,21), # define # units to test
+  batch = c(2, 4), # batch size to trial
+  e = 300, # define number of epochs (note --> callback is used so rarley will this number be achieved)
+  delta = .00001, # set delta for call back end training
+  patience = 5, # set patience for call back end training
   dropout = 0, # regulations parameter, not used in this tune
   aim = 1 # set aim to return the results gris (ie train and Val MAE)
 )
@@ -334,8 +430,8 @@ resultsGrid <- test_tune_grid( # call test tune grid to build and test model wit
   trainPredictors = trainPredictors, # pass all training predictors
   trainResponse = trainResponse, # pass all training responses
   k = 4, # Define # folds for k folds cross validation
-  layers = c(11), # freeze layers from previous investigation
-  units = c(19), # freeze units from previous investigation
+  layers = c(12,24,36), # freeze layers from previous investigation
+  units = c(20), # freeze units from previous investigation
   batch = c(2), # freeze batch from previous investigation
   e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
   delta = .00000005, # set delta for call back end training
@@ -357,13 +453,13 @@ saveRDS(resultsGrid,"resultsGrid_NN_reg_gcloud.RDS")
 startTime <- Sys.time()
 
 ## No reg
-history_19_11 <- test_tune_grid( # call test tune grid to build and test model with the following parameters
+history_21_12 <- test_tune_grid( # call test tune grid to build and test model with the following parameters
   model_builder = build_model, # use the model builder without regulisation
   trainPredictors = trainPredictors, # pass all training predictors
   trainResponse = trainResponse, # pass all training responses
   k = 4, # Define # folds for k folds cross validation
-  layers = c(11), # freeze layers from previous investigation
-  units = c(19), # freeze units from previous investigation
+  layers = c(12), # freeze layers from previous investigation
+  units = c(21), # freeze units from previous investigation
   batch = c(2), # freeze batch from previous investigation
   e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
   delta = 0, # set delta for call back end training
@@ -373,16 +469,16 @@ history_19_11 <- test_tune_grid( # call test tune grid to build and test model w
 )
 
 ## save history_19_11 to RDS for use later
-saveRDS(history_19_11,"history_19_11.RDS")
+saveRDS(history_21_12,"history_21_12.RDS")
 
 ## Reg
-history_19_11_reg <- test_tune_grid( # call test tune grid to build and test model with the following parameters
+history_21_12_reg <- test_tune_grid( # call test tune grid to build and test model with the following parameters
   model_builder = build_model_reg, # use the model builder without regulisation
   trainPredictors = trainPredictors, # pass all training predictors
   trainResponse = trainResponse, # pass all training responses
   k = 4, # Define # folds for k folds cross validation
-  layers = c(11), # freeze layers from previous investigation
-  units = c(19), # freeze units from previous investigation
+  layers = c(12), # freeze layers from previous investigation
+  units = c(21), # freeze units from previous investigation
   batch = c(2), # freeze batch from previous investigation
   e = 500, # define number of epochs (note --> callback is used so rarley will this number be achieved)
   delta = 0, # set delta for call back end training
@@ -396,19 +492,19 @@ finishTime <- Sys.time()
 (runTime_mods <- difftime(finishTime, startTime))
 #####
 ## save history_19_11 to RDS for use later
-saveRDS(history_19_11_reg,"history_19_11_reg.RDS")
+saveRDS(history_21_12_reg,"history_12_12_reg.RDS")
 
 ## Build final model epochs = 50, no regulation and fit to training data, then test on test data
 #####
 ## Build Model
 startTime <- Sys.time() # set start time
 
-tensorboard("my_log_dir") # call tensor board
+#tensorboard("my_log_dir") # call tensor board
 
-callbacks = list( # only call back TB, no need to stop training early as we have selected the desired number of epochs
-  callback_tensorboard( # call TB
-    log_dir = "my_log_dir",
-    histogram_freq = 1))
+#callbacks = list( # only call back TB, no need to stop training early as we have selected the desired number of epochs
+  #callback_tensorboard( # call TB
+   # log_dir = "my_log_dir",
+    #histogram_freq = 1))
 
 model_final <- build_model( # use the model builder without regulisation to build model
   l = 11, # build model with 11 layers
@@ -425,8 +521,8 @@ history <- model_final %>% fit( # fit model and record results in history
   trainPredictors, # training predictors
   trainResponse, # training response
   epochs = 50, # epochs (predefined for easy adjustment)
-  batch_size = 2, # batch size from tuning grid 
-  callbacks = callbacks # predefined call backs
+  batch_size = 2 # batch size from tuning grid 
+  #callbacks = callbacks # predefined call backs
 )
 
 ## return test and training data metrics
