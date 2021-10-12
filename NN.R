@@ -507,8 +507,8 @@ startTime <- Sys.time() # set start time
     #histogram_freq = 1))
 
 model_final <- build_model( # use the model builder without regulisation to build model
-  l = 12, # build model with 11 layers
-  u = 21,  # build model with 19 units
+  l = 12, # build model with 12 layers
+  u = 20,  # build model with 20 units
   is = ncol(trainPredictors), # input shape 
   opt = "adam", # optimiser
   loss = "mse", # loss function
@@ -520,7 +520,7 @@ model_final <- build_model( # use the model builder without regulisation to buil
 history <- model_final %>% fit( # fit model and record results in history
   trainPredictors, # training predictors
   trainResponse, # training response
-  epochs = 50, # epochs (predefined for easy adjustment)
+  epochs = 75, # epochs (predefined for easy adjustment)
   batch_size = 2 # batch size from tuning grid 
   #callbacks = callbacks # predefined call backs
 )

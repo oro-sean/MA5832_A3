@@ -1,9 +1,7 @@
 ## set up environment
-
 rm(list = ls()) # removes all variables
 if(!is.null(dev.list())) dev.off() # clear plots
 cat("\014") # clear console
-.rs.restartR()
 
 library(readxl, quietly = TRUE)
 library(tidyr, quietly = TRUE)
