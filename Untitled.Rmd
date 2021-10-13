@@ -1,0 +1,149 @@
+---
+title: "MA5832 - Capstone Report"
+author: "Sean O'Rourke (13984624)"
+date: "Due 14 October 2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+Subtitle: Predicting Unemployment in Australia
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, include = TRUE)
+```
+## Abstract
+
+***
+\newpage
+```{r set up environment, include=FALSE, echo=FALSE}
+## Set up environemnt and import data
+
+rm(list = ls()) # removes all variables
+if(!is.null(dev.list())) dev.off() # clear plots
+cat("\014") # clear console
+
+library(readxl, quietly = TRUE)
+library(tidyr, quietly = TRUE)
+library(dplyr, quietly = TRUE)
+library(DataExplorer, quietly = TRUE)
+library(reshape2, quietly = TRUE)
+library(ggplot2, quietly = TRUE)
+library(R.utils, quietly = TRUE)
+library(data.table, quietly = TRUE)
+library(tseries, quietly = TRUE)
+library(roll, quietly = TRUE)
+library(imputeFin, quietly = TRUE)
+library(earth, quietly = TRUE)
+
+## Import Data from .xlsx
+file <- "AUS_Data.xlsx" # set source data file name
+dataIn <-  read_excel(file,
+                       col_name = TRUE, # first row is column names
+                       col_types = rep(c("numeric"), times = 9) # import all variables as numeric
+                       ) # the data is imported, the .csv file has headers which will be used as the column names of the data frame, any stirngs in the data set will be treated as factors
+
+rawData <- data.frame(dataIn[-1 , ]) # change data structure to dataframe drop the first row as it was the column names.
+
+rawData[ ,1] <- as.Date(as.POSIXct(rawData[ ,1]*24*60*60, origin = "1900-01-01")) # convert excel time to POSIXct excel time is days since 1990, POSIXct excects seconds from origin
+colnames(rawData)[1] <- c("Date") # set column name
+
+```
+
+## Introduction
+
+The aim of this investigation is to predict the unemployment rate in Australia for the period March 2018 to September 2020 using the supplied "AUS_Data.xlsx" data set. The data set contains a selection of economic metric collected from June 1981 through to September 2020. The specifications of the task require the fitting of a single layer machine learning algorithm and a Neural Network to the data prior to March 2018 and then, using the predictors from March 2018 to September 2020, predict the unemployment rate.
+
+The provided data set contains the following variable
+
+* Response
+  + Y : Unemployment Rate (%)
+  
+* Predictors
+  + X1 : Change in GDP (%)
+  + X2 : Change in Government final consumption expenditure (%)
+  + X3 : Percentage change in final consumption expenditure all industries (%)
+  + X4 : Term of Trade Index (%)
+  + X5 : Consumer Price Index (all groups)
+  + X6 : Number of Job vacancies (1000's)
+  + X7 : Population (estimated) (1000's)
+
+Firstly it is important to understand the meaning of unemployment which can be considered as the percentage of people who are available and willing to work but currently without work (OECD, 2020). While there are many issues around unemployment and participation (making ones self willing and able to work) they are beyond the scope of this investigation. The predictors in the supplied data set consists of entirely quantitative continuous measures compiled by the Australian Bureau of Statistics. It is beyond the scope of this investigation to research the soundness of the provided predictors or extend the dataset to included other predictors, however it is important to understand some of the potential short comings of the initial assumptions. Firstly there are many qualitative measures of the economic conditions such as the change in expectation of long term unemployment (Claveria, 2019) which could be found to be important. There are countless further examples of such economic forces such as stock market crashes, natural disasters and change in governments and their policies which this data set does not capture and may influence the unemployment rate. Karanassou and Sala (2009) found that oil price shocks in the 1980's where on of the greatest drivers of the spike in unemployment however interest rates also contributed. it was also found that the the increase in terms of trade correlated well with the subsequent downward trend in unemployment. A notably relevant example of a similar shock is the COVID-19 pandemic which falls in the targeted prediction period. While this brief review of the literature is by no mean exhaustive it does highlight the broad bases of factors that are commonly considered when modelling unemployment relative to the small number of provided predictors. This highlights the need to generate models which generalize well and do not learn underlying patterns that are not represented well in the predictors. This will be particularity important to remember as the data set is relatively small and thus will be prone to over fitting (Geron, 2019).
+
+To gain an understanding of the provided data some exploratory data exploration was undertaken. Basic inspection can be found in Appendix 1, importantly it can be seen that X6 and X7 contain missing values which will need to be addressed. To gain an initial understanding of the data set and potential correlations between the predictors and response a time series plot is shown in Figure 1. Importantly it can be seen that while some predictors correlate directly with unemployment (either positively or negatively), many don't, however it can be seen that it appears for some that unemployment is high when variance is high and low when the measure is stable. Further the need to normalize the population, job vacancy and CPI predictors which simply continue on an upward trend is apparent. 
+
+***
+
+```{r Figure 1, Echo=FALSE, Include=FALSE, warning=FALSE, message=FALSE, fig.cap = "Time Series plots of the response and predictor variables"}
+## Create time series plot of response and predictors
+plotData <- rawData # move data to new Df for manipulation for plotting
+colnames(plotData) <- c("Date",
+                        "Y-Unemployment Rate (%)", 
+                        "X1-Change GDP (Perc)",
+                        "X2-D Consumption Exp. (gov) (%)", 
+                        "X3-D Consumption Exp. (All) (%)", 
+                        "X4-Term of Trade Index (%)",
+                        "X5-CPI",
+                        "X6-# Job Vacancies (Thousands)",
+                        "X7-Population (Thousands)")
+
+plotData[ ,-1] <- scale(plotData[ , -1], center = TRUE, scale = TRUE) # scale all values except the period 
+plotData <- melt( plotData, # Melt Data for plotting
+  id.vars = c("Date"), # use Periods as ID's
+  varnames = c("Date", "variable", "value"), # Set column names
+  na.rm = TRUE) # remove missinng values for the time being
+
+timeSeries_plot_init <- ggplot(data = plotData, aes(x = Date, y = value)) + # plot Data
+  geom_line(aes(color = variable), show.legend = FALSE, size = 0.5) + # add line showing data
+  geom_smooth(colour = "darkgrey", method = "loess", span = 0.2, alpha = .5, se = FALSE, linetype = "longdash") + # add smoothed line to asses long term trends
+  facet_wrap(plotData$variable) +
+  theme_light()
+  
+timeSeries_plot_init
+```
+
+```{r figure 2 , Echo=FALSE, Include=TRUE, warning=FALSE, message=FALSE, fig.cap = "Boxplot of normalized variables", fig.height=4}
+## quick box plot
+plotData <- rawData # move data to new Df for manipulation for plotting
+colnames(plotData) <- c("Date",
+                        "Y", 
+                        "X1",
+                        "X2", 
+                        "X3", 
+                        "X4",
+                        "X5",
+                        "X6",
+                        "X7")
+plotData[ ,-1] <- scale(plotData[ , -1], center = TRUE, scale = TRUE) # scale all values except the period 
+plotData <- melt( plotData, # Melt Data for plotting
+  id.vars = c("Date"), # use Periods as ID's
+  varnames = c("Date", "variable", "value"), # Set column names
+  na.rm = TRUE) # remove missinng values for the time being
+
+boxplot(plotData$value~plotData$variable, ann=FALSE)
+
+
+```
+
+\newpage
+## Data
+
+
+
+## Appendix 1 - Initial Data Exploration
+
+```{r Appendix 1, echo=TRUE, include=TRUE}
+## exploratory visulisation
+
+introduce(rawData) # quick tables detailing data
+plot_missing(rawData) # find missing values
+
+
+```
+
+
+
+Claveria, O. Forecasting the unemployment rate using the degree of agreement in consumer unemployment expectations. J Labour Market Res 53, 3 (2019). https://doi.org/10.1186/s12651-019-0253-4
+Karanassou, M. Sala, H. Labour  Market  Dynamics  in Australia: What  Drives  Unemployment? (January 2009) (published in: Economic Record, 2010, 86 (273), 185-209) 
+https://data.oecd.org/unemp/unemployment-rate-forecast.htm
+Geron, A. (2019) Hands-On Machine Learning with Scikit-Learn, Keras & TensorFlow. Sebastopol: O'Reilly
