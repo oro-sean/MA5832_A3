@@ -199,9 +199,11 @@ engineeredFeatures <- engineeredFeatures[ ,colSums(is.na(engineeredFeatures))<nr
 Correlation <- apply(engineeredFeatures, 2, cor, y = rawData$Y, use = "complete.obs") # calculate correlation between each feature and Y
 `# NA's` <- colSums(is.na(engineeredFeatures)) # count the number of NA's (ie how many observations will be lost by retaining a certain feature)
 
-plot(x = `# NA's`, y = 1 - abs(Correlation)) # plot # NA's vs inverse correlation to determine if good value
+corPlot_df <- data.frame(`Rows Lost` = `# NA's`, Cor = Correlation)
+saveRDS(corPlot_df, file = "corPlot.RDS")
+corPlot<- plot(x = `# NA's`, y = 1 - abs(Correlation)) + # plot # NA's vs inverse correlation to determine if good value
 text(x = `# NA's`, y = .95 - abs(Correlation), label = `# NA's`) # add labels for # NA's for easy identification
-engineeredFeatures <- engineeredFeatures[ ,colSums(is.na(engineeredFeatures))<22] # Remove features with more than 21 NA's
+engineeredFeatures <- engineeredFeatures[ ,colSums(is.na(engineeredFeatures))<21] # Remove features with more than 21 NA's
 
 modelData <- data.frame(rawData, engineeredFeatures) # combine original variables and engineered features into data frame
 modelData <- modelData[complete.cases(modelData), ] # remove observations which are incomplete ( due to rolling window at beginning)
