@@ -62,11 +62,10 @@ MARS_REFINED <- train(x = trainPredictors, # use caret train to train the model 
                       y = trainResponse, # training response
                       method = "earth", # use the MARS algorithm
                       metric = "Rsquared", # train using Rsquared
-                      trControl = trainControl( method = "repeatedcv", # use repeated cv with bigger folds to try and reduce variability due to outliers
-                                                number = 3, # use 5 fold croos validation
-                                                repeats = 3), # repeated 5 times
+                      trControl = trainControl( method = "LOOCV", # use LOOCV to help reduce influence of outliers and overfitting
+                                                number = 1), # # to leave out
                       tuneGrid = expand.grid(degree = 1:2, # tune for degree 1 --> 2
-                                             nprune = 10:25) # tune over the range 10 --> 25
+                                             nprune = 15:21) # tune over the range 10 --> 25
 )
 
 ## Plot results
